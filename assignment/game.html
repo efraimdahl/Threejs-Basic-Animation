@@ -1,0 +1,261 @@
+<html lang="en">
+	<head>
+		<title>Find the red cubes</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<style>
+			body {
+				background-color: #f0f0f0;
+				color: #444;
+			}
+			a {
+				color: #08f;
+			}
+		</style>
+
+		<style>
+		  .stopwatch {
+		    display: inline-block;
+		    background-color: white;
+		    border: 1px solid #eee;
+		    padding: 5px;
+		    margin: 5px;
+		  }
+		  .stopwatch span {
+		    font-weight: bold;
+		    display: block;
+		  }
+		  .stopwatch a {
+		    padding-right: 5px;
+		    text-decoration: none;
+		  }
+		</style>
+	</head>
+	<body>
+
+		<div id="info">
+			<div class="stopwatch" id="a-timer"></div>
+		</div>
+
+
+		<script type="text/javascript" src="stopwatch.js"></script>
+
+		<script type="module">
+
+			import * as THREE from '../build/three.module.js';
+
+			var container;
+			var camera, scene, raycaster, renderer;
+			var mouse = new THREE.Vector2(100,100), INTERSECTED;
+			var radius = 100, theta = 0;
+			var shifted = false;
+			var geometry;
+			let found = 0;
+			init();
+			animate();
+			console.log("started (if you want to see this print, go to the \"inspector\" console on your browser!");
+
+			function init() {
+				//--------------- don't change below -------------------------------------
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 25, window.innerWidth / window.innerHeight, 1, 10000 );
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xf0f0f0 );
+				var light = new THREE.DirectionalLight( 0xffffff, 1 );
+				light.position.set( 1, 1, 1 ).normalize();
+				scene.add( light );
+
+				//make on box
+				geometry = new THREE.BoxBufferGeometry( 10, 10, 10 );
+				
+				//populate screen with 3 rows of boxes
+				for ( var i = 0; i < 3; i ++ ) {
+					var red_sheep = Math.floor(Math.random() * 5 );
+					//each row has five boxes stacked behind each other
+					for ( var j = 0; j < 5; j ++ ) {
+						var object;
+						if (j == red_sheep) {
+							object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xff0000 } ) );
+						}
+						else {
+							object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+						}
+						//move boxes
+						object.position.x = -25 + 25 * i; 
+						object.position.y = 0; 
+						object.position.z = -100 + -25 * j ; 
+						//rotate boxes
+						object.rotation.y = Math.random() * 2 * Math.PI/4;
+						object.rotation.z = Math.random() * 2 * Math.PI/4;
+						//scale boxes
+						if (j == 0) {
+							object.scale.x = Math.random() + 0.7;
+							object.scale.y = Math.random() + 0.7;
+						}
+						object.scale.z = Math.random() + 0.5;
+						//add boxes to scene, so they are rendered automatically
+						scene.add( object );
+					}
+				}
+				raycaster = new THREE.Raycaster(); //what's this curious item doing here?
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				window.addEventListener( 'resize', onWindowResize, false );
+				//--------------- don't change above -------------------------------------
+			}
+
+			function onWindowResize() {
+				//very very unlikely that you need to change this function
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentMouseMove( event ) {
+				//unlikely that you need to change this function
+				event.preventDefault();
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+			}
+
+
+			//------------------
+			// you can create as many new functions as you need
+			//------------------
+
+
+			window.addEventListener("keydown", event => {
+			//------------------
+			// you can add code here if you need, but mostly optional (you can change this function at will)
+			//------------------
+
+			//console.log("keydown" + event.keyCode); //you might find this useful
+			  //if (event.keyCode == 16){
+			  //  shifted=true;
+			  //}
+			});
+
+
+			window.addEventListener("keyup", event => {
+			//------------------
+			// you can add code here if you need, but mostly optional (you can change this function at will)
+			//------------------
+
+			//console.log("keyup" + event.keyCode); //you might find this useful
+			  //if (event.keyCode == 16){
+			  //  shifted=false;
+			  //}
+			});
+
+
+			window.addEventListener('mousedown', e => {
+				console.log("clicked.");
+				var x = e.clientX;
+				var y = e.clientY;
+				let clickintersects = raycaster.intersectObjects( scene.children );
+				console.log(clickintersects);
+				//Only effect first intersected item.
+				if(clickintersects.length>=1){
+					let obj = clickintersects[0]
+					console.log(obj.object.material.color);
+					if(obj.object.material.color.r ==1  && obj.object.material.color.g==0 && obj.object.material.color.b ==0){
+						scene.remove(obj.object);
+						console.log("clicked red");
+						found++;
+						if(found==3){
+							alert("You have found three red cubes")
+						}
+					}
+					else{
+					obj.object.material.color.set(0xffffff);
+					obj.object.position.x = 100;
+					}
+				}
+
+
+				//------------------
+				// most of your code will probably go here
+				//------------------
+
+
+			});
+
+
+			function animate() {
+				//very unlikely that you need to change anything here
+				requestAnimationFrame( animate );
+				render();
+			}
+
+
+			function render(){
+				// ---------------- do not change below ---------------------
+				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				camera.lookAt( scene.position );
+				camera.updateMatrixWorld();
+				// ---------------- do not change above ---------------------
+
+				//------------------
+				// you can add code here if you need, but mostly optional
+				//------------------
+
+				raycaster.setFromCamera( mouse, camera );
+
+				const intersects = raycaster.intersectObjects( scene.children );
+				//CODE BIT FROM THREEJS DOCUMENTATION https://threejs.org/examples/#webgl_interactive_cubes
+				if ( intersects.length > 0 ) {
+
+					if ( INTERSECTED != intersects[ 0 ].object ) {
+
+						if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+
+						INTERSECTED = intersects[ 0 ].object;
+						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+						INTERSECTED.material.emissive.setHex( 0xff0000 );
+						if(INTERSECTED.material.color.r ==1  && INTERSECTED.material.color.g==0 && INTERSECTED.material.color.b ==0){
+							//DO NOTHIN
+						}else{
+							if(INTERSECTED.touched){
+							}
+							else{
+								INTERSECTED.touched = true;
+								let a = Math.random()*2 -1;
+								let b = Math.random()*2-1;
+								let c = Math.random()*2-1;
+								let dir = new THREE.Vector3(a,b,c);
+								INTERSECTED.direction = dir;
+								console.log(dir)
+							}
+						}
+
+					}
+
+				} else {
+
+					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+
+					INTERSECTED = null;
+
+				}
+				scene.children.forEach(object =>{
+					if(object.touched){
+						object.position.add(object.direction);
+					}
+				})
+				// ---------------- do not change below ---------------------
+				renderer.render( scene, camera );
+				// ---------------- do not change above ---------------------
+			}
+		</script>
+
+	</body>
+</html>
